@@ -1,0 +1,26 @@
+[INIT] Starting Flink job submission...
+[INIT] Waiting for Flink REST API...
+[INIT] Flink REST API is ready.
+[INIT] Submitting Flink job...
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+Could not get job jar and dependencies from JAR file: JAR file does not exist: /opt/flink/usrlib/flink-kafka-clickhouse-1.0-SNAPSHOT.jar
+
+Use the help option (-h or --help) to get help on the command.
+[ERROR] Job submission failed!
+[INIT] Starting Flink job submission...
+[INIT] Waiting for Flink REST API...
+[INIT] Flink REST API is ready.
+[INIT] Submitting Flink job...
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+Could not get job jar and dependencies from JAR file: JAR file does not exist: /opt/flink/usrlib/flink-kafka-clickhouse-1.0-SNAPSHOT.jar
+
+Use the help option (-h or --help) to get help on the command.
+[ERROR] Job submission failed!

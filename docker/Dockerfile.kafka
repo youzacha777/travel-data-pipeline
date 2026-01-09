@@ -1,0 +1,8 @@
+FROM confluentinc/cp-kafka:7.9.0
+
+# 토픽 생성 스크립트 복사
+COPY kafka-init/create-topics.sh /kafka-init/create-topics.sh
+RUN chmod +x /kafka-init/create-topics.sh
+
+# 기본 Kafka 실행
+ENTRYPOINT ["/etc/confluent/docker/run"]

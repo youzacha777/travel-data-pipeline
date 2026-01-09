@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # 1. Kafka (KRaft 모드: ZooKeeper 미사용)
+  kafka:
+    image: confluentinc/cp-kafka:7.9.0
+    container_name: kafka
+    ports:
+      - "9092:9092" # 로컬 Go 제너레이터 접속용
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      # 내부 통신용 컨테이너 포트
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,EXTERNAL://0.0.0.0:9092'
+      # 외부(호스트)에서 접근할 Kafka 포트
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CLUSTER_ID: my-cluster-1
+    networks:
+      - flink-kafka-net
+    volumes:
+      - ./kafka-init:/kafka-init  # create-topics.sh를 컨테이너에 마운트
+    entrypoint: ["/bin/bash", "-c", "/kafka-init/format-and-start.sh"]
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:29092", "--list"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+
+  # 1.1 Kafka-ui
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8082:8080"  # UI를 8082 포트에서 접근 가능
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=flink-kafka-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+    networks:
+      - flink-kafka-net
+    depends_on:
+      - kafka
+
+
+  # 2 Kafka init (토픽 생성)
+  kafka-init:
+    image: confluentinc/cp-kafka:7.9.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - flink-kafka-net
+    volumes:
+      - ./kafka-init:/kafka-init
+    entrypoint: ["/kafka-init/create-topics.sh"]
+
+
+
+  # 3. Flink JobManager
+  flink-jobmanager:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.flink
+    container_name: flink-jobmanager
+    depends_on:
+      - kafka
+      - clickhouse
+    command: jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        jobmanager.memory.process.size: 1024m
+        rest.address: 0.0.0.0
+        rest.bind-address: 0.0.0.0
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./flink-checkpoints:/tmp/flink-checkpoints
+    networks:
+      - flink-kafka-net
+
+
+
+
+
+  # 4. Flink TaskManager
+  flink-taskmanager:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.flink
+    container_name: flink-taskmanager
+    depends_on:
+      - flink-jobmanager
+      - clickhouse
+    command: taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        taskmanager.memory.process.size: 2048m
+    networks:
+      - flink-kafka-net
+      
+
+  # 4. Flink Job Run (Init Container)
+  flink-job-init:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.flink
+    container_name: flink-job-init
+    depends_on:
+      - flink-jobmanager
+    volumes:
+      - ./flink-init/flink-job.sh:/flink-job.sh
+    entrypoint: ["sh", "/flink-job.sh"]
+    networks:
+      - flink-kafka-net
+
+      
+  # 5. ClickHouse
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: clickhouse
+    ports:
+      - "8123:8123" # HTTP
+      - "9000:9000" # Native client
+    environment:
+      - CLICKHOUSE_DB=user_events
+      - CLICKHOUSE_USER=clickhouse
+      - CLICKHOUSE_PASSWORD=pass
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./clickhouse-init:/docker-entrypoint-initdb.d  # init SQL 마운트
+    networks:
+      - flink-kafka-net
+
+
+    # 6. Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Grafana UI 접속용
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin  # 관리자 비밀번호 설정
+    depends_on:
+      - clickhouse
+    networks:
+      - flink-kafka-net
+    volumes:
+      - grafana_data:/var/lib/grafana  # Grafana 데이터 저장소
+
+
+networks:
+  flink-kafka-net:
+    driver: bridge
+
+volumes:
+  kafka_data:
+  clickhouse_data:
+  grafana_data:
