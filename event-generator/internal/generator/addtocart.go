@@ -4,12 +4,12 @@ import (
 	"event-generator/internal/fsm"
 )
 
-// genAddToCart generates payload for shopping cart state events.
+// genAddToCart
 func (g *PayloadGenerator) genAddToCart(session fsm.Session, eventType string) map[string]any {
 	payload := map[string]any{}
 
 	// 1. 공통 페이로드: 세션에서 상품 정보 및 수량 불러오기
-	// 상세 페이지(Click)에서 저장했던 LastPicked와 LastQuantity를 활용합니다.
+	// 상세 페이지(Click)에서 저장했던 LastPicked와 LastQuantity를 활용
 	lastProductID, lastCategory, lastCountry := session.GetLastPicked()
 	lastQuantity := session.GetLastQuantity()
 

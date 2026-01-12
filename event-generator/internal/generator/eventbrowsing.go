@@ -4,7 +4,7 @@ import (
 	"event-generator/internal/fsm"
 )
 
-// genEventBrowsing generates payload for events occurring within special event pages.
+// genEventBrowsing
 func (g *PayloadGenerator) genEventBrowsing(session fsm.Session, eventType string) map[string]any {
 	payload := map[string]any{}
 

@@ -4,7 +4,7 @@ import (
 	"event-generator/internal/fsm"
 )
 
-// genBrowsing generates payload for browsing-related events based on session state.
+// genBrowsing
 func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) map[string]any {
 	payload := map[string]any{}
 
@@ -46,10 +46,9 @@ func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) ma
 		payload["product_name"] = product.ProductName
 		payload["category"] = product.Category
 		payload["country"] = product.Country
-		payload["recommend_category"] = "recommend_list_to_friends" // 아까 요청하신 필드 추가
 		payload["stay_sec"] = g.rnd.Intn(180) + 5
 
-	case string(fsm.EvenCategoryClicked): // Even -> Event 오타 주의 (상수 확인 필요)
+	case string(fsm.EvenCategoryClicked):
 		pageTypes := []string{"country_category", "product_category"}
 		pageType := pageTypes[g.rnd.Intn(len(pageTypes))]
 		session.SetPageType(pageType)

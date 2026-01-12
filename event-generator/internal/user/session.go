@@ -31,7 +31,7 @@ type Session struct {
 var sessionStore = make(map[string]*Session)
 var mu sync.Mutex // 동시성 문제 해결을 위한 뮤텍스
 
-// NewSession creates a new Session for given userID with ttl duration.
+// NewSession
 func NewSession(sessionID, userID string, ttl time.Duration) *Session {
 	now := time.Now().UnixMilli()
 	return &Session{
@@ -43,7 +43,7 @@ func NewSession(sessionID, userID string, ttl time.Duration) *Session {
 	}
 }
 
-// GetSession retrieves the session by sessionID, or creates a new one if not found
+// GetSession
 func GetSession(sessionID, userID string, ttl time.Duration) *Session {
 	mu.Lock()
 	defer mu.Unlock()

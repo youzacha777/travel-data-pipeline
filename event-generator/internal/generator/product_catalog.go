@@ -120,14 +120,12 @@ func pickTopProduct(r *rand.Rand) *Product {
 }
 
 func DistinguishAndGetProduct(query string) (*Product, string) {
-	// 1. [상품명 완전 일치] 우선 확인
-	// "홍콩 디즈니"라고 쳤을 때 "홍콩" 국가로 빠지지 않고 해당 상품을 바로 주기 위함
+	// 1. 상품명 일치 확인
 	if p, ok := GetProductByName(query); ok {
 		return p, "product_match"
 	}
 
-	// 2. [국가명 완전 일치] 확인
-	// 키워드가 우리가 정의한 국가 상수(예: "태국", "미국")와 정확히 일치하는지 확인
+	// 2. 국가명 일치 확인
 	if _, ok := countryMap[query]; ok {
 		p, found := GetRandomProductByCountry(query)
 		if found {
@@ -135,7 +133,7 @@ func DistinguishAndGetProduct(query string) (*Product, string) {
 		}
 	}
 
-	// 3. [카테고리명 완전 일치] 확인
+	// 3. 카테고리명 일치 확인
 	// 키워드가 "museum", "attraction" 등 카테고리명인지 확인
 	if _, ok := categoryMap[query]; ok {
 		p, found := GetRandomProductByCategory(query)
@@ -144,7 +142,7 @@ func DistinguishAndGetProduct(query string) (*Product, string) {
 		}
 	}
 
-	// 4. [부분 일치] (Optional)
+	// 4. 부분 일치 체크
 	// 위에서 완전히 일치하는 키워드가 없을 때만 마지막으로 이름에 포함되어 있는지 확인
 	for name, p := range productMap {
 		if strings.Contains(name, query) {

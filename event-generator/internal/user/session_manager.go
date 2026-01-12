@@ -82,11 +82,10 @@ func (sm *SessionManager) Step() {
 		sm.metrics.IncSessionStart()
 	}
 
-	// [중요] payload 생성 시 세션과 이벤트 타입을 함께 전달
-	// (Generate 함수가 내부에서 genPurchase(s, ev.EventType)를 호출하게 됩니다)
+	// payload 생성 시 세션과 이벤트 타입을 함께 전달
 	payload := sm.payloadGen.Generate(ev.EventType, s)
 
-	// 페이로드 합치기 로직...
+	// 페이로드 합치기
 	if ev.Attributes.Extra == nil {
 		ev.Attributes.Extra = make(map[string]any)
 	}
@@ -96,7 +95,7 @@ func (sm *SessionManager) Step() {
 
 	sm.eventChan <- ev
 
-	// [중요] 최종 종료 이벤트인 경우에만 여기서 세션을 명시적으로 삭제
+	// 최종 종료 이벤트인 경우 여기서 세션 삭제
 	if ev.EventType == string(fsm.EventExit) {
 		sm.mu.Lock()
 		delete(sm.sessions, s.ID)
@@ -115,9 +114,8 @@ func (sm *SessionManager) getOrCreateSession(userID string, now int64) *Session 
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	// 1. 기존 세션 중 '진짜 종료(StateExit)' 상태가 아닌 세션을 찾음
+	// 1. 기존 세션 중 'StateExit' 상태가 아닌 세션을 찾음
 	for _, s := range sm.sessions {
-		// StatePurchase 상태여도 데이터를 유지해야 하므로 재사용 대상으로 포함합니다.
 		if s.UserID == userID && s.State != fsm.StateExit {
 			s.LastEventTs = now
 			s.ExpiresAt = now + sm.ttl.Milliseconds()

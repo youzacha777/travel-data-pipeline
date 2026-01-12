@@ -12,7 +12,7 @@ func (g *PayloadGenerator) genClick(session fsm.Session, eventType string) map[s
 	// 1. 공통 페이로드: 세션에서 마지막으로 픽한 상품 정보 가져오기
 	lastProductID, lastCategory, lastCountry := session.GetLastPicked()
 
-	// 이 정보는 어떤 이벤트가 발생하든 상세 페이지 로그에는 기본으로 포함되어야 합니다.
+	// 이 정보는 클릭 이후 어떤 이벤트가 발생하든 상세 페이지 로그에는 기본으로 포함
 	payload["product_id"] = lastProductID
 	payload["category"] = lastCategory
 	payload["country"] = lastCountry

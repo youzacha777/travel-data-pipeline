@@ -43,21 +43,19 @@ func (g *PayloadGenerator) genNextPage(session fsm.Session, eventType string) ma
 			return nil
 		}
 
-		// 3. 세션 업데이트 (제공해주신 SetLastPicked 활용)
+		// 3. 세션 업데이트
 		session.SetLastPicked(product.ProductID, product.Category, product.Country)
 
-		// 4. 페이로드 구성 (추천 분류값 포함)
+		// 4. 페이로드 구성
 		payload["product_id"] = product.ProductID
 		payload["product_name"] = product.ProductName
 		payload["category"] = product.Category
 		payload["country"] = product.Country
-		payload["search_type"] = searchType // 검색어가 뭐였는지 분석용 데이터 추가
+		payload["search_type"] = searchType // 검색어가 뭐였는지
 
 	case string(fsm.EventBack):
 		// 이전 페이지로 돌아감
 		payload["action"] = "back_button_click"
-
-		// 이벤트 페이지에서 얼마나 머물다 돌아갔는지 기록
 		payload["stay_sec"] = g.rnd.Intn(60) + 2
 
 	case string(fsm.EventExit):

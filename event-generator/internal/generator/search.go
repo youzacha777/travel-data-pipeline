@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-// genSearch generates payload for Search state events.
+// genSearch
 func (g *PayloadGenerator) genSearch(session fsm.Session, eventType string) map[string]any {
 	payload := map[string]any{
 		"query": session.GetSearchKeyword(),
@@ -29,11 +29,11 @@ func (g *PayloadGenerator) genSearch(session fsm.Session, eventType string) map[
 
 	case string(fsm.EventProductClicked):
 		keyword := session.GetSearchKeyword()
-		// 1. 키워드로 상품 찾기
+		// 키워드
 		product, _ := DistinguishAndGetProduct(keyword)
 
 		if product != nil {
-			// 2. 세션에 저장 (이게 되어야 다음 Purchase에서 꺼낼 수 있음)
+			// 세션에 저장
 			session.SetLastPicked(product.ProductID, product.Category, product.Country)
 
 			// 3. 페이로드 구성
@@ -41,12 +41,8 @@ func (g *PayloadGenerator) genSearch(session fsm.Session, eventType string) map[
 			payload["category"] = product.Category
 			payload["country"] = product.Country
 		} else {
-			// [중요] 상품을 못 찾았을 때 로그를 찍어봐야 합니다.
-			// 데이터 맵에 해당 키워드에 맞는 상품이 없는 경우입니다.
+			// 상품을 못 찾았을 때 로그
 			log.Printf("[WARN] No product matched for keyword: '%s'", keyword)
-
-			// 방어 로직: 상품을 못 찾으면 임의의 상품이라도 세팅할지 결정해야 합니다.
-			// 현재는 비어있는 상태로 넘어가므로 이후 단계에서 0이나 빈값이 찍히게 됩니다.
 		}
 
 	}

@@ -41,7 +41,7 @@ func (g *PayloadGenerator) Generate(eventType string, session *user.Session) map
 
 	// 3. 상품 클릭 (검색 결과 리스트에서 클릭했는지 판별)
 	case string(fsm.EventProductClicked):
-		// 이전 상태가 검색과 관련된 곳이었다면 상품 정보를 세션에 저장해야 하므로 genSearch 호출
+		// 이전 상태가 검색이었다면 상품 정보를 세션에 저장해야 하므로 genSearch 호출
 		if prevState == fsm.StateSearch || prevState == fsm.StateNextPage {
 			eventPayload = g.genSearch(session, eventType)
 		} else {
@@ -73,7 +73,6 @@ func (g *PayloadGenerator) Generate(eventType string, session *user.Session) map
 		eventPayload["session_id"] = session.GetID()
 		eventPayload["user_id"] = session.GetUserID()
 		eventPayload["generated_at"] = session.GetLastEventTs()
-		// 모니터링 및 디버깅을 위해 현재 상태 정보를 함께 보냅니다.
 		eventPayload["current_state"] = string(currState)
 	}
 
