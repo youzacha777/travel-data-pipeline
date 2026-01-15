@@ -5,6 +5,7 @@ type Metrics interface {
 	IncSessionStart()
 	IncSessionComplete()
 	IncStateTransition(prev, next string)
+	IncError(errorType string)
 	Snapshot() Snapshot
 }
 
@@ -14,4 +15,5 @@ type Snapshot struct {
 	SessionsStarted  int64
 	SessionsComplete int64
 	StateTransitions map[string]int64
+	ErrorsByType     map[string]int64
 }

@@ -122,7 +122,7 @@ func (f *SimpleFSM) Step(s Session, now int64) *event.Event {
 
 	// 8. 이벤트 생성
 	return &event.Event{
-		EventID:   fmt.Sprintf("evt-%d-%d", now, f.rnd.Int63n(100000)),
+		EventID:   fmt.Sprintf("evt-%d-%09d", now, rand.Int63n(1_000_000_000)),
 		EventType: string(evType),
 		EventTs:   now,
 		UserID:    s.GetUserID(),

@@ -155,10 +155,53 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin  # 관리자 비밀번호 설정
     depends_on:
       - clickhouse
+      - prometheus
     networks:
       - flink-kafka-net
     volumes:
       - grafana_data:/var/lib/grafana  # Grafana 데이터 저장소
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  # 7. Prometheus
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - kafka-exporter
+      - node-exporter
+    command:
+    - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+    - flink-kafka-net
+
+  # 8. Kafka-exporter
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    container_name: kafka-exporter
+    command:
+      - --kafka.server=kafka:29092
+      - --group.filter=.*
+      - --topic.filter=.*
+    depends_on:
+      - kafka
+    restart: always
+    ports:
+      - "9308:9308"
+    networks:
+      - flink-kafka-net
+
+
+  # 9. Node-exporter
+  node-exporter:
+    image: prom/node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+    - flink-kafka-net
 
 
 networks:

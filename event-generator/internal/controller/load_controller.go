@@ -8,7 +8,6 @@ import (
 
 type LoadController struct {
 	TargetTPS int
-	// PurchaseRatio float64
 
 	UserPool       *user.UserPool
 	SessionManager *user.SessionManager
@@ -16,81 +15,82 @@ type LoadController struct {
 	ticker       *time.Ticker
 	quitChan     chan struct{}
 	tickInterval time.Duration
+
+	workerCount int
 }
 
-// NewLoadController
 func NewLoadController(
 	tps int,
-	// ratio float64,
 	up *user.UserPool,
 	sm *user.SessionManager,
 ) *LoadController {
+	// 2만 TPS 대응을 위해 워커 수를 CPU 코어 수의 2배 정도로 설정 권장
+	// 예: 8코어 노트북이면 16개
+	workerCount := 4
 
 	return &LoadController{
-		TargetTPS: tps,
-		// PurchaseRatio:  ratio,
+		TargetTPS:      tps,
 		UserPool:       up,
 		SessionManager: sm,
 		quitChan:       make(chan struct{}),
-		tickInterval:   10 * time.Millisecond, // ✅ 고정
+		tickInterval:   20 * time.Millisecond, // 10ms보다 20ms~50ms가 타이머 오차가 적고 안정적입니다.
+		workerCount:    workerCount,
 	}
 }
 
-// Start begins load control loop
 func (lc *LoadController) Start() {
+	// 1. 작업을 전달할 채널 (버퍼를 두어 송신자가 대기하지 않도록 함)
+	taskCh := make(chan int, lc.workerCount*2)
+
+	// 2. 워커 고루틴 풀 미리 생성 (딱 한 번만 실행됨)
+	for w := 0; w < lc.workerCount; w++ {
+		go func(id int) {
+			for batchSize := range taskCh {
+				for i := 0; i < batchSize; i++ {
+					// 실제 이벤트 생성 로직 수행
+					lc.SessionManager.Step()
+				}
+			}
+		}(w)
+	}
+
 	lc.ticker = time.NewTicker(lc.tickInterval)
-	fmt.Printf(
-		"[LoadController] started (TargetTPS=%d, tick=%s)\n",
-		lc.TargetTPS,
-		lc.tickInterval,
-	)
+	defer lc.ticker.Stop()
+	defer close(taskCh)
+
+	fmt.Printf("[LoadController] started (TargetTPS=%d, tick=%s, workers=%d)\n",
+		lc.TargetTPS, lc.tickInterval, lc.workerCount)
+
+	ticksPerSecond := int(time.Second / lc.tickInterval)
+	totalBatchPerTick := lc.TargetTPS / ticksPerSecond
+	perWorkerBatch := totalBatchPerTick / lc.workerCount
+
+	if perWorkerBatch <= 0 {
+		perWorkerBatch = 1
+	}
 
 	for {
 		select {
 		case <-lc.ticker.C:
-			lc.tick()
+			// 유저 풀 확보
+			lc.UserPool.EnsureUsers(lc.requiredUserCount())
+
+			// 3. 고루틴 생성 없이 채널로 작업 지시만 내림 (매우 빠름)
+			for w := 0; w < lc.workerCount; w++ {
+				taskCh <- perWorkerBatch
+			}
+
 		case <-lc.quitChan:
-			lc.ticker.Stop()
-			fmt.Println("[LoadController] stopped")
+			fmt.Println("[LoadController] stopping...")
 			return
 		}
 	}
 }
 
-// Stop stops the controller
 func (lc *LoadController) Stop() {
 	close(lc.quitChan)
 }
 
-// tick runs once per tickInterval
-func (lc *LoadController) tick() {
-
-	// ticks per second 계산
-	ticksPerSecond := int(time.Second / lc.tickInterval)
-
-	// tick 당 처리량
-	batch := lc.TargetTPS / ticksPerSecond
-	if batch <= 0 {
-		batch = 1
-	}
-
-	// 유저 풀 확보
-	lc.UserPool.EnsureUsers(lc.requiredUserCount())
-
-	// FSM Step 실행 (이벤트 생성)
-	for i := 0; i < batch; i++ {
-		lc.SessionManager.Step()
-	}
-	// 고루틴을 사용하여 병렬로 이벤트 처리
-	// for i := 0; i < batch; i++ {
-	// 	go func() {
-	// 		lc.SessionManager.Step() // 이벤트 생성
-	// 	}()
-	// }
-}
-
-// requiredUserCount calculates required users
 func (lc *LoadController) requiredUserCount() int {
-	// 경험적 기준 (조정 가능)
 	return lc.TargetTPS * 2
 }

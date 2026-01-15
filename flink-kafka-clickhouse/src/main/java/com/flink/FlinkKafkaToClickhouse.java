@@ -32,8 +32,10 @@ public class FlinkKafkaToClickhouse {
         config.setTaskCancellationInterval(10000); // 작업 취소 간격 10초
 
         // 1.2 체크포인트 설정
-        env.enableCheckpointing(30000, CheckpointingMode.EXACTLY_ONCE); // 30초마다 체크포인트
-        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(5000); // 최소 대기 시간
+        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE); // 30초마다 체크포인트
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(2000); // 최소 대기 시간
+        // 체크포인트 타임아웃 설정 (네트워크 상황 고려)
+        env.getCheckpointConfig().setCheckpointTimeout(60000);
         env.setStateBackend(new FsStateBackend("file:///tmp/flink-checkpoints")); // 체크포인트 상태 저장 위치
 
         // 1.3 재시도 전략 설정
@@ -46,6 +48,8 @@ public class FlinkKafkaToClickhouse {
                 .setGroupId("flink-user-events")
                 .setStartingOffsets(OffsetsInitializer.earliest()) // 시작점 명시
                 .setValueOnlyDeserializer(new SimpleStringSchema())
+                // 체크포인트 성공 시 오프셋 커밋 강제 (Lag 정확도 향상)
+                .setProperty("commit.offsets.on.checkpoint", "true")
                 .build();
 
         // Kafka에서 데이터를 읽어오는 스트림
@@ -60,8 +64,8 @@ public class FlinkKafkaToClickhouse {
                 .build();
 
         JdbcExecutionOptions executionOptions = JdbcExecutionOptions.builder()
-                .withBatchSize(500)         // 배치 크기
-                .withBatchIntervalMs(2000)  // 2초마다 flush
+                .withBatchSize(15000)         // 배치 크기
+                .withBatchIntervalMs(1000)  // 1초마다 flush
                 .withMaxRetries(3)          // 실패 시 3회 재시도
                 .build();
 
