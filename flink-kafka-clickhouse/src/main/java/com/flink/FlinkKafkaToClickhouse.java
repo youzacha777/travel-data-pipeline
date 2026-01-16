@@ -24,7 +24,7 @@ public class FlinkKafkaToClickhouse {
 
         // 1. Flink 환경 설정
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(4);  // 병렬 처리 수 설정
+        env.setParallelism(12);  // 병렬 처리 수 설정
 
         // 1.1 ExecutionConfig 설정
         ExecutionConfig config = env.getConfig();
@@ -64,8 +64,8 @@ public class FlinkKafkaToClickhouse {
                 .build();
 
         JdbcExecutionOptions executionOptions = JdbcExecutionOptions.builder()
-                .withBatchSize(15000)         // 배치 크기
-                .withBatchIntervalMs(1000)  // 1초마다 flush
+                .withBatchSize(50000)         // 배치 크기
+                .withBatchIntervalMs(2500)  // flush
                 .withMaxRetries(3)          // 실패 시 3회 재시도
                 .build();
 
