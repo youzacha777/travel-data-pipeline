@@ -3,7 +3,7 @@ set -e
 
 TOPIC_NAME="user_events"
 BOOTSTRAP_SERVER="kafka:29092" # kafka-init 컨테이너에서도 kafka 호스트명으로 접속 가능
-PARTITIONS=16      # 초당 20k 이벤트 목표
+PARTITIONS=12      # 초당 20k 이벤트 목표
 REPLICATION=1     # 단일 브로커 환경
 
 echo "Waiting for Kafka broker to be ready..."
