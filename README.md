@@ -24,7 +24,7 @@ Go–Kafka–Flink–ClickHouse–Grafana로 이어지는
 
 - FSM(Finite State Machine) 기반 유저 행동 시뮬레이션
 - 실제 커머스 흐름을 반영한 상태 전이 모델
-- 초당 **20,000 TPS** 이벤트 안정적 생성
+- 초당 **20,000 (TPS)** 이벤트 안정적 생성
 - UserID 기반 Kafka Key 파티셔닝으로 이벤트 순서 보장
 
 ### 2. 실시간 스트림 처리 (Kafka + Flink)
@@ -85,7 +85,7 @@ Go–Kafka–Flink–ClickHouse–Grafana로 이어지는
 
 ## 성과
 
-- 초당 **20,000 TPS** 실시간 이벤트 처리 성능 검증
+- 초당 **20,000 (TPS)** 실시간 이벤트 처리 성능 검증
 - Exactly-Once 기반 데이터 정합성 확보
 - 단순 로그가 아닌 **유저 여정 중심 분석 구조 구현**
 - 여행 이커머스 도메인을 반영한 실무 지향 파이프라인 설계 경험
