@@ -1,17 +1,19 @@
 package fsm
 
 import (
-	"math/rand"
+	"math/rand/v2" // v1 대신 v2를 사용합니다.
 )
 
 // 상태 랜덤 선택용 함수
-func chooseTransition(r *rand.Rand, ts []Transition) *Transition {
+// [수정] 인자에서 r *rand.Rand 제거. 이제 전역 rand.Float64()를 사용합니다.
+func chooseTransition(ts []Transition) *Transition {
 	total := 0.0
 	for _, t := range ts {
 		total += t.Weight
 	}
 
-	p := r.Float64() * total
+	// v2의 전역 Float64()는 여러 고루틴이 동시에 호출해도 안전합니다.
+	p := rand.Float64() * total
 	acc := 0.0
 
 	for _, t := range ts {
@@ -24,7 +26,8 @@ func chooseTransition(r *rand.Rand, ts []Transition) *Transition {
 }
 
 // 검색어 세팅용 함수
-func FakeKeyword(r *rand.Rand) string {
+// [수정] 인자에서 r *rand.Rand 제거. 전역 rand.IntN()을 사용합니다.
+func FakeKeyword() string {
 	keywords := []string{
 		// 국가 검색어
 		"홍콩", "대만", "마카오", "싱가포르", "말레이시아", "태국", "UAE", "미국",
@@ -57,5 +60,6 @@ func FakeKeyword(r *rand.Rand) string {
 		"LA 빅 버스", "MoMA", "탑 오브 더 락",
 	}
 
-	return keywords[r.Intn(len(keywords))]
+	// rand.Intn(len) -> rand.IntN(len) (v2는 대문자 N입니다)
+	return keywords[rand.IntN(len(keywords))]
 }

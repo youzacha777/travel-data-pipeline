@@ -25,13 +25,13 @@ var Transitions = map[State][]Transition{
 		{Event: EventPageClicked, NextState: StateEventBrowsing, Weight: 0.2}, // 이벤트 페이지 클릭시 상세 조건 별 분기는 fsm.step 함수에서 처리
 
 		// 카테고리 페이지 클릭
-		{Event: EvenCategoryClicked, NextState: StateClick, Weight: 0.2}, // 이벤트 페이지 클릭시 상세 조건 별 분기는 fsm.step 함수에서 처리
+		{Event: EventCategoryClicked, NextState: StateClick, Weight: 0.2}, // 이벤트 페이지 클릭시 상세 조건 별 분기는 fsm.step 함수에서 처리
 
 		// 홈/첫 페이지 조회 (머무름)
-		{Event: EventPageViewed, NextState: StateBrowsing, Weight: 0.5}, // 상태 변화 없이 머무름
+		{Event: EventPageViewed, NextState: StateBrowsing, Weight: 0.05}, // 상태 변화 없이 머무름
 
 		// 이탈
-		{Event: EventExit, NextState: StateExit, Weight: 0.5},
+		{Event: EventExit, NextState: StateExit, Weight: 0.05},
 	},
 
 	// =========================================================

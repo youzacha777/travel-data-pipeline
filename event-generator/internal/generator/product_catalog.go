@@ -1,7 +1,7 @@
 package generator
 
 import (
-	"math/rand"
+	"math/rand/v2" // v1 대신 v2를 사용합니다.
 	"strings"
 )
 
@@ -57,7 +57,7 @@ var homeExposureProductNames = []string{
 func init() {
 	productMap = make(map[string]*Product)
 	countryMap = make(map[string][]*Product)
-	categoryMap = make(map[string][]*Product) // <-- 추가
+	categoryMap = make(map[string][]*Product)
 
 	for i := range products {
 		p := &products[i]
@@ -68,11 +68,9 @@ func init() {
 		// 2. 국가별 상품 묶음 (1:N)
 		countryMap[p.Country] = append(countryMap[p.Country], p)
 
-		// 3. 카테고리별 상품 묶음 (1:N) <-- 추가
+		// 3. 카테고리별 상품 묶음 (1:N)
 		categoryMap[p.Category] = append(categoryMap[p.Category], p)
-
 	}
-
 }
 
 // GetProductByName: 상품명으로 정확히 일치하는 상품 정보 반환
@@ -83,36 +81,36 @@ func GetProductByName(name string) (*Product, bool) {
 
 // GetRandomProductByCountry: 국가명으로 검색하여 해당 국가 상품 중 랜덤 1개 반환
 func GetRandomProductByCountry(country string) (*Product, bool) {
-	products, ok := countryMap[country]
-	if !ok || len(products) == 0 {
+	productList, ok := countryMap[country]
+	if !ok || len(productList) == 0 {
 		return nil, false
 	}
 
-	// 랜덤 인덱스 선택
-	randomIndex := rand.Intn(len(products))
-	return products[randomIndex], true
+	// [수정] rand.Intn -> rand.IntN (v2 전역 함수 사용)
+	randomIndex := rand.IntN(len(productList))
+	return productList[randomIndex], true
 }
 
 // GetRandomProductByCategory: 카테고리명으로 검색하여 해당 카테고리 상품 중 랜덤 1개 반환
 func GetRandomProductByCategory(category string) (*Product, bool) {
-	products, ok := categoryMap[category]
-	if !ok || len(products) == 0 {
+	productList, ok := categoryMap[category]
+	if !ok || len(productList) == 0 {
 		return nil, false
 	}
 
-	randomIndex := rand.Intn(len(products))
-	return products[randomIndex], true
+	// [수정] rand.Intn -> rand.IntN (v2 전역 함수 사용)
+	randomIndex := rand.IntN(len(productList))
+	return productList[randomIndex], true
 }
 
-// pickTopExposureProduct: 홈 노출 리스트 중 하나를 랜덤하게 뽑아 상세 정보 반환
-func pickTopProduct(r *rand.Rand) *Product {
-	// 1. 이름 리스트에서 랜덤하게 하나 선택
-	name := homeExposureProductNames[r.Intn(len(homeExposureProductNames))]
+// pickTopProduct: 홈 노출 리스트 중 하나를 랜덤하게 뽑아 상세 정보 반환
+// [수정] 인자에서 r *rand.Rand 제거
+func pickTopProduct() *Product {
+	// [수정] rand.Intn -> rand.IntN (v2 전역 함수 사용)
+	name := homeExposureProductNames[rand.IntN(len(homeExposureProductNames))]
 
-	// 2. 이미 만들어둔 GetProductByName 함수 활용
 	p, ok := GetProductByName(name)
 	if !ok {
-		// init에서 맵핑이 잘 되었다면 절대 발생하지 않음
 		panic("exposure product name not found in map: " + name)
 	}
 
@@ -134,7 +132,6 @@ func DistinguishAndGetProduct(query string) (*Product, string) {
 	}
 
 	// 3. 카테고리명 일치 확인
-	// 키워드가 "museum", "attraction" 등 카테고리명인지 확인
 	if _, ok := categoryMap[query]; ok {
 		p, found := GetRandomProductByCategory(query)
 		if found {
@@ -143,7 +140,6 @@ func DistinguishAndGetProduct(query string) (*Product, string) {
 	}
 
 	// 4. 부분 일치 체크
-	// 위에서 완전히 일치하는 키워드가 없을 때만 마지막으로 이름에 포함되어 있는지 확인
 	for name, p := range productMap {
 		if strings.Contains(name, query) {
 			return p, "partial_match"

@@ -109,7 +109,6 @@ func (sm *SessionManager) Step() {
 		sm.metrics.IncSessionComplete()
 	}
 
-	// [삭제] sm.cleanupSessions(now) -> 이제 백그라운드에서 처리합니다.
 }
 
 // =======================
@@ -120,7 +119,7 @@ func (sm *SessionManager) getOrCreateSession(userID string, now int64) *Session 
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	// [수정] O(N) 루프 제거 -> userID 인덱스를 통해 O(1)로 조회
+	// userID 인덱스를 통해 O(1)로 조회
 	if sid, ok := sm.userToSession[userID]; ok {
 		if s, exists := sm.sessions[sid]; exists && s.State != fsm.StateExit {
 			s.LastEventTs = now
@@ -152,7 +151,7 @@ func (sm *SessionManager) deleteSession(userID, sessionID string) {
 	delete(sm.userToSession, userID)
 }
 
-// [수정] 백그라운드 세션 청소 (워커들의 락 경합 방지)
+// 백그라운드 세션 청소 (워커들의 락 경합 방지)
 func (sm *SessionManager) backgroundCleanup() {
 	ticker := time.NewTicker(2 * time.Second) // 2초마다 수행
 	for range ticker.C {
@@ -171,7 +170,7 @@ func (sm *SessionManager) backgroundCleanup() {
 	}
 }
 
-// [수정] 훨씬 빠른 ID 생성 방식으로 대체
+// ID 생성
 func generateSessionID() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }

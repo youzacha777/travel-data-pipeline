@@ -2,6 +2,7 @@ package generator
 
 import (
 	"event-generator/internal/fsm"
+	"math/rand/v2" // v1 대신 v2를 사용합니다.
 )
 
 // genBrowsing
@@ -12,45 +13,50 @@ func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) ma
 
 	case string(fsm.EventSearchSubmitted):
 		payload["query"] = session.GetSearchKeyword()
-		payload["stay_sec"] = g.rnd.Intn(10) + 1
+		// [수정] rand.IntN 사용
+		payload["stay_sec"] = rand.IntN(10) + 1
 
 	case string(fsm.EventPageViewed):
 		session.SetPageType("first_page")
 		payload["page_type"] = "first_page"
-		payload["stay_sec"] = g.rnd.Intn(180) + 5
+		// [수정] rand.IntN 사용
+		payload["stay_sec"] = rand.IntN(180) + 5
 
 	case string(fsm.EventPageClicked):
 		pageTypes := []string{"special_event_category", "recommend_category"}
-		pageType := pageTypes[g.rnd.Intn(len(pageTypes))]
+		// [수정] rand.IntN 사용
+		pageType := pageTypes[rand.IntN(len(pageTypes))]
 		session.SetPageType(pageType)
 		payload["page_type"] = pageType
 
 		switch pageType {
 		case "special_event_category":
 			eventPages := []string{"flight_promotion", "referral_promotion", "continent_promotion", "season_promotion"}
-			eventPage := eventPages[g.rnd.Intn(len(eventPages))]
+			eventPage := eventPages[rand.IntN(len(eventPages))]
 			session.SetEventPage(eventPage)
 			payload["special_event_category"] = eventPage
 		case "recommend_category":
 			session.SetEventPage("recommend_category")
 			payload["recommend_category"] = "recommend_list_to_friends"
 		}
-		payload["stay_sec"] = g.rnd.Intn(180) + 5
+		payload["stay_sec"] = rand.IntN(180) + 5
 
 	case string(fsm.EventProductClicked):
-		// s -> session으로 수정, r -> g.rnd로 수정
-		product := pickTopProduct(g.rnd)
+		// [핵심 수정] pickTopProduct는 이제 인자를 받지 않습니다.
+		// g.rnd를 넘기지 않고 바로 호출합니다.
+		product := pickTopProduct()
 		session.SetLastPicked(product.ProductID, product.Category, product.Country)
 
 		payload["product_id"] = product.ProductID
 		payload["product_name"] = product.ProductName
 		payload["category"] = product.Category
 		payload["country"] = product.Country
-		payload["stay_sec"] = g.rnd.Intn(180) + 5
+		payload["stay_sec"] = rand.IntN(180) + 5
 
-	case string(fsm.EvenCategoryClicked):
+	case string(fsm.EventCategoryClicked):
 		pageTypes := []string{"country_category", "product_category"}
-		pageType := pageTypes[g.rnd.Intn(len(pageTypes))]
+		// [수정] rand.IntN 사용
+		pageType := pageTypes[rand.IntN(len(pageTypes))]
 		session.SetPageType(pageType)
 		payload["page_type"] = pageType
 
@@ -60,7 +66,7 @@ func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) ma
 				CountryHongKong, CountryTaiwan, CountryMacau, CountrySingapore,
 				CountryMalaysia, CountryThailand, CountryUAE, CountryUSA,
 			}
-			selectedCountry := countries[g.rnd.Intn(len(countries))]
+			selectedCountry := countries[rand.IntN(len(countries))]
 			if product, ok := GetRandomProductByCountry(selectedCountry); ok {
 				session.SetLastPicked(product.ProductID, product.Category, product.Country)
 				payload["selected_country"] = selectedCountry
@@ -76,7 +82,7 @@ func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) ma
 				CategoryFood, CategoryTour, CategoryShow,
 				CategoryExhibition, CategoryEtc,
 			}
-			selectedCategory := categories[g.rnd.Intn(len(categories))]
+			selectedCategory := categories[rand.IntN(len(categories))]
 			if product, ok := GetRandomProductByCategory(selectedCategory); ok {
 				session.SetLastPicked(product.ProductID, product.Category, product.Country)
 				payload["selected_category"] = selectedCategory
@@ -86,7 +92,7 @@ func (g *PayloadGenerator) genBrowsing(session fsm.Session, eventType string) ma
 				payload["recommend_category"] = "category_navigation_list"
 			}
 		}
-		payload["stay_sec"] = g.rnd.Intn(180) + 5
+		payload["stay_sec"] = rand.IntN(180) + 5
 
 	case string(fsm.EventExit):
 		payload["exit_reason"] = "user_left"

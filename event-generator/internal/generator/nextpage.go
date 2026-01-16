@@ -3,6 +3,7 @@ package generator
 import (
 	"event-generator/internal/fsm"
 	"log"
+	"math/rand/v2" // v1 대신 v2를 사용합니다.
 )
 
 // GenerateNextPagePayload
@@ -18,7 +19,8 @@ func (g *PayloadGenerator) genNextPage(session fsm.Session, eventType string) ma
 	payload["page_index"] = session.GetPageIndex()
 
 	// 체류 시간
-	payload["stay_sec"] = g.rnd.Intn(40) + 10
+	// [수정] g.rnd.Intn -> rand.IntN (v2 전역 함수 사용)
+	payload["stay_sec"] = rand.IntN(40) + 10
 
 	switch eventType {
 	case string(fsm.EventPageViewed):
@@ -56,15 +58,16 @@ func (g *PayloadGenerator) genNextPage(session fsm.Session, eventType string) ma
 	case string(fsm.EventBack):
 		// 이전 페이지로 돌아감
 		payload["action"] = "back_button_click"
-		payload["stay_sec"] = g.rnd.Intn(60) + 2
+		// [수정] g.rnd.Intn -> rand.IntN
+		payload["stay_sec"] = rand.IntN(60) + 2
 
 	case string(fsm.EventExit):
 		// 앱 종료 혹은 이탈
 		payload["exit_reason"] = "user_left"
 
 		// 이탈 전 최종 체류 시간
-		payload["total_event_stay_sec"] = g.rnd.Intn(50) + 10
-
+		// [수정] g.rnd.Intn -> rand.IntN
+		payload["total_event_stay_sec"] = rand.IntN(50) + 10
 	}
 
 	return payload

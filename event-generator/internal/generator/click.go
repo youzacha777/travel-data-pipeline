@@ -2,6 +2,7 @@ package generator
 
 import (
 	"event-generator/internal/fsm"
+	"math/rand/v2"
 )
 
 // GenerateClickPayload
@@ -20,7 +21,7 @@ func (g *PayloadGenerator) genClick(session fsm.Session, eventType string) map[s
 	switch eventType {
 	case string(fsm.EventAddToCart), string(fsm.EventPurchased):
 		// 수량 랜덤 생성 (1~5개)
-		quantity := g.rnd.Intn(5) + 1
+		quantity := rand.IntN(5) + 1
 
 		// 세션에 수량 저장 (추후 결제 단계 등에서 활용)
 		session.SetLastQuantity(quantity)
@@ -30,7 +31,7 @@ func (g *PayloadGenerator) genClick(session fsm.Session, eventType string) map[s
 
 	case string(fsm.EventBack):
 		// 이전 상태로 돌아가므로 payload 그대로 유지
-		payload["stay_sec"] = g.rnd.Intn(30) + 5
+		payload["stay_sec"] = rand.IntN(30) + 5
 
 	case string(fsm.EventExit):
 		payload["exit_reason"] = "user_left"

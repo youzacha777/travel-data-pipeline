@@ -24,7 +24,7 @@ const (
 	EventPageViewed      EventType = "page_viewed"
 	EventPageClicked     EventType = "event_page_clicked"
 	EventProductClicked  EventType = "product_clicked"
-	EvenCategoryClicked  EventType = "category_clicked"
+	EventCategoryClicked EventType = "category_clicked"
 	EventAddToCart       EventType = "add_to_cart"
 	EventPurchased       EventType = "purchased"
 	EventBack            EventType = "back"

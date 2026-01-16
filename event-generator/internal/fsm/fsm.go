@@ -3,13 +3,12 @@ package fsm
 import (
 	"event-generator/internal/event"
 	"fmt"
-	"math/rand"
+	"math/rand/v2" // v1 대신 v2를 사용합니다. (Thread-safe 최적화)
 )
 
 // =======================================================
 // Session Interface (FSM이 요구하는 최소 계약)
 // =======================================================
-// fsm.go (인터페이스)
 type Session interface {
 	GetID() string
 	GetUserID() string
@@ -26,9 +25,8 @@ type Session interface {
 	GetSearchKeyword() string
 	SetSearchKeyword(string)
 
-	// 브라우징 컨텍스트
-	SetEventPage(string)  // eventPage 저장 메서드
-	GetEventPage() string // eventPage 불러오는 메서드
+	SetEventPage(string)
+	GetEventPage() string
 	SetPageType(string)
 	GetPageType() string
 	SetBrowsingCountryCategory(string)
@@ -37,8 +35,7 @@ type Session interface {
 	GetBrowsingProductCategory() string
 	ResetBrowsingContext()
 
-	// 상품 세부 선택 시 랜덤 선택 후 최소 정보
-	SetLastPicked(productID, category, countryr string)
+	SetLastPicked(productID, category, country string)
 	GetLastProductID() string
 	GetLastCategory() string
 	GetLastCountry() string
@@ -47,7 +44,6 @@ type Session interface {
 	SetLastQuantity(qty int)
 	GetLastQuantity() int
 
-	// Paging
 	GetPageIndex() int
 	SetPageIndex(int)
 	IncrementPageIndex()
@@ -66,11 +62,12 @@ type FSM interface {
 // SimpleFSM
 // =======================================================
 type SimpleFSM struct {
-	rnd *rand.Rand
+	// 이제 rnd *rand.Rand를 저장할 필요가 없습니다.
+	// rand/v2의 전역 함수는 내부적으로 성능 최적화와 동시성 보호가 되어 있습니다.
 }
 
-func NewSimpleFSM(r *rand.Rand) *SimpleFSM {
-	return &SimpleFSM{rnd: r}
+func NewSimpleFSM() *SimpleFSM {
+	return &SimpleFSM{}
 }
 
 // =======================================================
@@ -90,7 +87,8 @@ func (f *SimpleFSM) Step(s Session, now int64) *event.Event {
 	}
 
 	// 3. transition 선택
-	tr := chooseTransition(f.rnd, transitions)
+	// f.rnd 대신 전역 rand를 사용하도록 chooseTransition의 인자를 수정해야 합니다.
+	tr := chooseTransition(transitions)
 	if tr == nil {
 		return nil
 	}
@@ -116,13 +114,15 @@ func (f *SimpleFSM) Step(s Session, now int64) *event.Event {
 
 	// 7. 검색 이벤트일 때만 키워드 생성
 	if evType == EventSearchSubmitted {
-		s.SetSearchKeyword(FakeKeyword(f.rnd))
+		// FakeKeyword 역시 내부적으로 rand/v2를 쓰도록 수정 필요합니다.
+		s.SetSearchKeyword(FakeKeyword())
 		s.SetPageIndex(1)
 	}
 
 	// 8. 이벤트 생성
+	// rand.Int63n -> rand.Int64N (v2 대문자 N)으로 변경하여 안전하게 ID 생성
 	return &event.Event{
-		EventID:   fmt.Sprintf("evt-%d-%09d", now, rand.Int63n(1_000_000_000)),
+		EventID:   fmt.Sprintf("evt-%d-%09d", now, rand.Int64N(1_000_000_000)),
 		EventType: string(evType),
 		EventTs:   now,
 		UserID:    s.GetUserID(),

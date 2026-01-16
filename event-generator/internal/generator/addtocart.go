@@ -2,6 +2,7 @@ package generator
 
 import (
 	"event-generator/internal/fsm"
+	"math/rand/v2"
 )
 
 // genAddToCart
@@ -23,7 +24,7 @@ func (g *PayloadGenerator) genAddToCart(session fsm.Session, eventType string) m
 	payload["quantity"] = lastQuantity // Click 단계에서 생성된 수량
 
 	// 기본 체류 시간 (장바구니 확인 시간)
-	payload["stay_sec"] = g.rnd.Intn(20) + 5
+	payload["stay_sec"] = rand.IntN(20) + 5
 
 	// 2. 이벤트별 분기 처리
 	switch eventType {

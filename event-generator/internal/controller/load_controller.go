@@ -26,7 +26,7 @@ func NewLoadController(
 ) *LoadController {
 	// 2만 TPS 대응을 위해 워커 수를 CPU 코어 수의 2배 정도로 설정 권장
 	// 예: 8코어 노트북이면 16개
-	workerCount := 4
+	workerCount := 12
 
 	return &LoadController{
 		TargetTPS:      tps,

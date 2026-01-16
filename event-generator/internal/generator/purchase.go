@@ -2,6 +2,7 @@ package generator
 
 import (
 	"event-generator/internal/fsm"
+	"math/rand/v2" // v1 대신 v2를 사용합니다.
 )
 
 // genPurchase
@@ -20,17 +21,20 @@ func (g *PayloadGenerator) genPurchase(session fsm.Session, eventType string) ma
 
 	// 3. 결제 특화 정보
 	paymentMethods := []string{"card", "kakao_pay", "naver_pay", "apple_pay", "google_pay"}
-	payload["payment_method"] = paymentMethods[g.rnd.Intn(len(paymentMethods))]
+	// [수정] g.rnd.Intn -> rand.IntN (v2 전역 함수 사용)
+	payload["payment_method"] = paymentMethods[rand.IntN(len(paymentMethods))]
 
 	// 4. 체류 시간
-	payload["stay_sec"] = g.rnd.Intn(40) + 20
+	// [수정] g.rnd.Intn -> rand.IntN
+	payload["stay_sec"] = rand.IntN(40) + 20
 
 	// 5. 이벤트 타입별 추가 처리
 	switch eventType {
 	case string(fsm.EventExit):
 		payload["action"] = "order_complete_exit"
 		payload["exit_reason"] = "user_closed_after_purchase"
-		payload["stay_sec"] = g.rnd.Intn(10) + 2
+		// [수정] g.rnd.Intn -> rand.IntN
+		payload["stay_sec"] = rand.IntN(10) + 2
 	}
 
 	return payload
