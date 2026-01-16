@@ -28,11 +28,11 @@ public class FlinkKafkaToClickhouse {
 
         // 1.1 ExecutionConfig 설정
         ExecutionConfig config = env.getConfig();
-        config.setAutoWatermarkInterval(2000); // 수분 마커 자동 생성 주기 2초
+        config.setAutoWatermarkInterval(2000); // 마커 자동 생성 주기 2초
         config.setTaskCancellationInterval(10000); // 작업 취소 간격 10초
 
         // 1.2 체크포인트 설정
-        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE); // 30초마다 체크포인트
+        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE); // 5초마다 체크포인트
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(2000); // 최소 대기 시간
         // 체크포인트 타임아웃 설정 (네트워크 상황 고려)
         env.getCheckpointConfig().setCheckpointTimeout(60000);
