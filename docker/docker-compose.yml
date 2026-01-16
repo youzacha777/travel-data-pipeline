@@ -102,7 +102,7 @@ services:
     environment:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
-        taskmanager.numberOfTaskSlots: 4
+        taskmanager.numberOfTaskSlots: 12
         taskmanager.memory.process.size: 2048m
     networks:
       - flink-kafka-net
